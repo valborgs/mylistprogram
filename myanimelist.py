@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 
-print("importing libraies...")
+print("importing modules...")
 try:
-    import tkinter as tk
-    from tkinter import *
-    from tkinter import messagebox
+    import os
+    from os import remove
     import sqlite3
     import urllib.request
     import requests
     from io import StringIO
     from lxml.html import parse
     from PIL import Image
-    import os
-    from os import remove
+    import PIL
+    import tkinter as tk
+    from tkinter import *
+    from tkinter import messagebox
+    import csv
 except:
-    print('failed to import')
+    print('failed to import modules')
     exit()
 #코드순서: sqlite > 버튼,새창 > tkinter
 
@@ -43,7 +45,7 @@ cur = conn.cursor()
 
 cur.execute('''
 CREATE TABLE IF NOT EXISTS Title (
-    id INTEGER UNIQUE PRIMARY KEY AUTOINCREMENT NOT NULL,
+    t_id INTEGER UNIQUE PRIMARY KEY AUTOINCREMENT NOT NULL,
     t_name TEXT UNIQUE,
     genre_id INTEGER,
     production_id INTEGER,
@@ -85,9 +87,10 @@ if len(bef) == 0:
 
 
 print("loading datas from DB...")
-cur.execute('''SELECT t_name, g_name, p_name, year, quarter FROM Title JOIN Genre ON Title.genre_id = Genre.id JOIN Production ON Title.production_id = Production.id JOIN Year ON Title.year_id = Year.id JOIN Quarter ON Title.quarter_id = Quarter.id''')
+cur.execute('''SELECT t_name, g_name, p_name, year, quarter, t_id FROM Title JOIN Genre ON Title.genre_id = Genre.id JOIN Production ON Title.production_id = Production.id JOIN Year ON Title.year_id = Year.id JOIN Quarter ON Title.quarter_id = Quarter.id''')
 
 lview = cur.fetchall()
+
 
 if len(lview) == 0:
     totalcount = 0
@@ -109,7 +112,9 @@ else:
     a_production = x[2]
     a_year = x[3]
     a_quarter = x[4]
-    imagefile = './image/' + a_title + ".gif"
+    a_ttid = x[5]
+    stra_ttid = str(a_ttid)
+    imagefile = './image/' + stra_ttid + ".gif"
 
 #####################################################################################################
 
@@ -124,8 +129,9 @@ def changeim():
     global photolabel
 
     try:
-        imagename = lview[animecount][0]
-        imagefile = './image/' + imagename + ".gif"
+        imageid = lview[animecount][5]
+        strimageid = str(imageid)
+        imagefile = './image/' + strimageid + ".gif"
         logo = PhotoImage(file = imagefile)
         photolabel.configure(image = logo)
         photolabel.image = logo #항상 이미지가 나타날 수 있도록?
@@ -223,8 +229,9 @@ def InputData():
     input_window.title("create new data")
     input_window.wm_iconbitmap('./image/myicon.ico')
     input_window.resizable(0,0)
-    input_window.lift()#윈도우 겹침 순서를 맨 위로 이동
     input_window.geometry("+605+100")#창이 켜지는 위치 지정
+    input_window.attributes('-topmost', 'true')#창 맨 앞으로
+    input_window.grab_set()
 
     Label(input_window, relief=RIDGE, text="제목", width=8, font=normal_font).grid(row=0,column=0)
 
@@ -263,7 +270,7 @@ def InputData():
     def getimage():
         gi_url = 'https://www.google.co.kr/search?hl=en&authuser=0&tbm=isch&source=hp&biw=1280&bih=617&ei=xTcTXISrBYK38QX0g4vgAg&q='
         cur.execute('''
-        SELECT t_name, g_name, p_name, year, quarter
+        SELECT t_name, g_name, p_name, year, quarter, t_id
         FROM Title
         JOIN Genre ON Title.genre_id = Genre.id
         JOIN Production ON Title.production_id = Production.id
@@ -271,9 +278,10 @@ def InputData():
         JOIN Quarter ON Title.quarter_id = Quarter.id
         ''')
         lview = cur.fetchall()
-        s_url = lview[-1][0]
-
-        urll =gi_url + s_url
+        imname = lview[-1][0]
+        ss_url = lview[-1][5]
+        s_url = str(ss_url)
+        urll =gi_url + imname
         savename = './image/' + s_url + ".gif"
 
         text = requests.get(urll).text
@@ -290,7 +298,7 @@ def InputData():
 
         urllib.request.urlretrieve(img_list[0], savename)
 
-        y1 = Image.open(savename)
+        y1 = PIL.Image.open(savename)
         y1size = 300, 320
         rey1 = y1.resize(y1size)
         rey1.save(savename)
@@ -311,16 +319,16 @@ def InputData():
 
 
         if itn == "" or ign == "" or ipn == "" or iyn == "" or iqn == "":
-            messagebox.showinfo("error","please, fill blanks")
+            messagebox.showinfo("error","please, fill blanks", parent=input_window)
 
         else:
             xx = [i for i in lview if itn in i]
-            if len(xx) > 0:
+            if xx:#xx값이 하나라도 있다면
                 sn = xx[0][0]
             else:
                 sn = 0
             if itn == sn:
-                messagebox.showinfo("error","this title is already in the list")
+                messagebox.showinfo("error","this title is already in the list", parent=input_window)
             else:
                 f_quarter = cur.execute("SELECT id From Quarter WHERE quarter = ?", [iqn]).fetchone()[0]
                 cur.execute('''INSERT OR IGNORE INTO  Year (year) VALUES (?)''', (iyn,))
@@ -335,7 +343,7 @@ def InputData():
                 pvbt.configure(state=NORMAL)
                 nxbt.configure(state=NORMAL)
                 if totalcount == 0:
-                    cur.execute('''SELECT t_name, g_name, p_name, year, quarter
+                    cur.execute('''SELECT t_name, g_name, p_name, year, quarter, t_id
                     FROM Title
                     JOIN Genre ON Title.genre_id = Genre.id
                     JOIN Production ON Title.production_id = Production.id
@@ -353,9 +361,9 @@ def InputData():
                     ln_value.set(str(listnumber))
                     listviewcount.set("total "+ str(totalcount))
                     changeim()
-                    messagebox.showinfo("done", "New data is inserted!")
+                    messagebox.showinfo("done", "New data is inserted!", parent=input_window)
                 else:
-                    cur.execute('''SELECT t_name, g_name, p_name, year, quarter
+                    cur.execute('''SELECT t_name, g_name, p_name, year, quarter, t_id
                     FROM Title
                     JOIN Genre ON Title.genre_id = Genre.id
                     JOIN Production ON Title.production_id = Production.id
@@ -373,14 +381,14 @@ def InputData():
                     ln_value.set(str(listnumber))
                     listviewcount.set("total "+ str(totalcount))
                     changeim()
-                    messagebox.showinfo("done", "New data is inserted!")
+                    messagebox.showinfo("done", "New data is inserted!", parent=input_window)
 
 
 
     ib1 = Button(input_window, state=NORMAL, command=ad2db, text="SAVE", width=58, pady=20)
     ib1.grid(row=5,columnspan=2, pady=5)
-
     input_window.mainloop()
+
 
 #delete window
 def DeleteData():
@@ -389,8 +397,9 @@ def DeleteData():
     delete_window.title("delete data")
     delete_window.wm_iconbitmap('./image/myicon.ico')
     delete_window.resizable(0,0)
-    delete_window.lift()
     delete_window.geometry("+605+100")
+    delete_window.attributes('-topmost', 'true')
+    delete_window.grab_set()
 
     dwf = LabelFrame(delete_window, text = ' Anime List ')
     dwf.pack()
@@ -411,31 +420,33 @@ def DeleteData():
         global totalcount
         global lview
         resultex = listboxx.curselection()
-        if resultex == ():
-            messagebox.showinfo('error','please, select data!')
+        if not resultex:
+            messagebox.showinfo('error','please, select data!', parent=delete_window)
         else:
             listindex = resultex[0]
             bfn = lview[listindex]
-            fn = bfn[0]#선택한애니메이션타이틀
+            fn = bfn[5]#선택한애니메이션의id값
             listboxx.delete(listindex)
-            cur.execute('''DELETE FROM Title WHERE t_name=?''',(fn,))
+            cur.execute('''DELETE FROM Title WHERE t_id=?''',(fn,))
             conn.commit()
-            cur.execute('''SELECT t_name, g_name, p_name, year, quarter
+            cur.execute('''SELECT t_name, g_name, p_name, year, quarter, t_id
             FROM Title
             JOIN Genre ON Title.genre_id = Genre.id
             JOIN Production ON Title.production_id = Production.id
             JOIN Year ON Title.year_id = Year.id
             JOIN Quarter ON Title.quarter_id = Quarter.id''')
             lview = cur.fetchall()
+
             totalcount = len(lview)
             listviewcount.set("total "+ str(totalcount))
             delete_window.destroy()
             try:
+                fn = str(fn)
                 os.remove('./image/' + fn + '.gif')
             except:
                 pass
 
-            if len(lview) == 0:
+            if not lview:
                 totalcount = 0
                 animecount = 0
                 listnumber = 0
@@ -448,7 +459,6 @@ def DeleteData():
                 ln_value.set(listnumber)
                 imagefile = './image/wink.gif'
                 logo = PhotoImage(file = imagefile)
-                logo.subsample(x='200', y='200')
                 photolabel.configure(image = logo)
                 photolabel.image = logo
                 pvbt.configure(state=DISABLED)
@@ -458,7 +468,6 @@ def DeleteData():
 
     deletebutton = Button(delete_window, text="DELETE", width=50, command=delfdb)
     deletebutton.pack()
-
     delete_window.mainloop()
 
 
@@ -469,8 +478,9 @@ def showall():
     sal_window.title("showall")
     sal_window.wm_iconbitmap('./image/myicon.ico')
     sal_window.resizable(0,0)
-    sal_window.lift()
     sal_window.geometry("+605+100")
+    sal_window.attributes('-topmost', 'true')
+    sal_window.grab_set()#해당 창만 포커스
 
     swf = LabelFrame(sal_window, text = ' List ')
     swf.pack()
@@ -491,7 +501,7 @@ def showall():
         global listnumber
         resultex2 = showlistbox.curselection()
         if resultex2 == ():
-            messagebox.showinfo('error','please, select data!')
+            messagebox.showinfo('error','please, select data!', parent=sal_window)
         else:
             animecount = resultex2[0]
             listnumber = animecount + 1
@@ -519,22 +529,26 @@ def showall():
         global listnumber
 
         resultex3 = showlistbox.curselection()
-        listorder = resultex3[0]
-        x = lview[listorder]
-        m_title = x[0]
-        m_genre = x[1]
-        m_pro = x[2]
-        m_year = x[3]
-        m_qua = x[4]
+
         if resultex3 == ():
-            messagebox.showinfo('error','please, select data!')
+            modierror = messagebox.showinfo('error','please, select data!', parent=sal_window)
         else:
+            listorder = resultex3[0]
+            x = lview[listorder]
+            m_title = x[0]
+            m_genre = x[1]
+            m_pro = x[2]
+            m_year = x[3]
+            m_qua = x[4]
             mod_window = Toplevel()
             mod_window.title("modify")
             mod_window.wm_iconbitmap('./image/myicon.ico')
             mod_window.resizable(0,0)
             mod_window.lift()
             mod_window.geometry("+605+100")
+            mod_window.attributes('-topmost', 'true')
+            sal_window.grab_release()
+            mod_window.grab_set()
 
             Label(mod_window, relief=RIDGE, text="제목", width=8, font=normal_font).grid(row=0,column=0)
 
@@ -617,15 +631,9 @@ def showall():
                 cur.execute('''UPDATE Title SET quarter_id = ? WHERE t_name = ?''',(mqn2,m_title))
 
                 conn.commit()
-                messagebox.showinfo('updated!','수정되었습니다!')
-                try:
-                    mi1 = Image.open("./image/"+m_title+".gif")
-                    mi1.save("./image/"+mtn+".gif")
-                    remove('./image/' + m_title + '.gif')
-                except:
-                    pass
+                messagebox.showinfo('updated!','수정되었습니다!', parent=mod_window)
 
-                cur.execute('''SELECT t_name, g_name, p_name, year, quarter
+                cur.execute('''SELECT t_name, g_name, p_name, year, quarter, t_id
                 FROM Title
                 JOIN Genre ON Title.genre_id = Genre.id
                 JOIN Production ON Title.production_id = Production.id
@@ -646,9 +654,9 @@ def showall():
                 year_value.set(str(a_year))
                 quarter_value.set(str(a_quarter))
                 ln_value.set(listnumber)
-                changeim()
-                imagename = lview[animecount][0]
-                imagefile = './image/' + imagename + ".gif"
+                imageid = x[5]
+                strimageid = str(imageid)
+                imagefile = './image/' + strimageid + ".gif"
                 logo = PhotoImage(file = imagefile)
                 photolabel.configure(image = logo)
                 photolabel.image = logo
@@ -658,17 +666,52 @@ def showall():
 
             mb1 = Button(mod_window, state=NORMAL, command=moddata, text="수정", width=58, pady=20)
             mb1.grid(row=5,columnspan=2, pady=5)
-
             mod_window.mainloop()
+
 
     gobutton = Button(sal_window, text="GO", width=50, command=gobutt)
     gobutton.pack()
 
     modifybutton = Button(sal_window, text="MODIFY", width=50, command=ModifyData)
     modifybutton.pack()
-
     sal_window.mainloop()
 
+def exportw():
+    global lview
+    export_window = Toplevel()
+    export_window.title("Export")
+    export_window.wm_iconbitmap('./image/myicon.ico')
+    export_window.resizable(0,0)
+    export_window.attributes('-topmost', 'true')
+
+    def excsv():
+        cur.execute('''
+        SELECT t_name, g_name, p_name, year, quarter
+        FROM Title
+        JOIN Genre ON Title.genre_id = Genre.id
+        JOIN Production ON Title.production_id = Production.id
+        JOIN Year ON Title.year_id = Year.id
+        JOIN Quarter ON Title.quarter_id = Quarter.id
+        ''')
+        lview = cur.fetchall()
+
+        head_row = [('Title', 'Genre', 'Production', 'Year', 'Quarter')]
+
+        with open('list.csv', 'w', newline='') as csvFile:
+            writer = csv.writer(csvFile)
+            writer.writerows(head_row)
+            writer.writerows(lview)
+
+        csvFile.close()
+        export_window.destroy()
+        messagebox.showinfo('done','csvfile is created!')
+
+    Label(export_window, text='export to csv file', font=large_font).grid(row=0, column=0, padx=5, pady=10)
+    expbutton = Button(export_window, text='EXPORT', font=large_font, state=NORMAL, command=excsv)
+    expbutton.grid(row=0, column=1, padx=5, pady=10)
+    if not lview:
+        expbutton.configure(text='NO DATAS',state='disabled')
+    export_window.mainloop()
 
 
 def aboutmew():
@@ -677,11 +720,11 @@ def aboutmew():
     aboutme_window.wm_iconbitmap('./image/myicon.ico')
     aboutme_window.resizable(0,0)
     aboutme_window.geometry("+150+100")
-    aboutme_window.lift()
+    aboutme_window.attributes('-topmost', 'true')
     Label(aboutme_window, text='made by. MSE', width=30, padx=5, pady=5).grid(row=0,columnspan=3, padx=5, pady=5)
-    Label(aboutme_window, text='0.6 ver', width=30, padx=5, pady=5).grid(row=1,columnspan=3, padx=5, pady=5)
-
+    Label(aboutme_window, text='0.7 ver', width=30, padx=5, pady=5).grid(row=1,columnspan=3, padx=5, pady=5)
     aboutme_window.mainloop()
+
 #####################################################################################################################
 
 
@@ -696,6 +739,9 @@ filemenu.add_command(label="delete data", command=DeleteData)
 filemenu.add_separator()
 filemenu.add_command(label="quit", command=window.destroy)
 menu1.add_cascade(label="Data", menu=filemenu)
+expmenu = Menu(menu1,tearoff=0)
+expmenu.add_command(label="export to CSV", command=exportw)
+menu1.add_cascade(label="Export", menu=expmenu)
 aboutmenu = Menu(menu1,tearoff=0)
 aboutmenu.add_command(label="About me", command=aboutmew)
 menu1.add_cascade(label="About", menu=aboutmenu)
@@ -795,6 +841,6 @@ Entry(sf, relief=SUNKEN, textvariable=quarter_value, width=20, font=large_font).
 
 
 #remain in the event loop until close the window
+
 window.mainloop()
 conn.close()
-print("disconnect anime DB!")
