@@ -6,15 +6,16 @@ try:
     from os import remove
     import sqlite3
     import urllib.request
-    import requests
     from io import StringIO
-    from lxml.html import parse
     from PIL import Image
     import PIL
+    import csv
+    from lxml.html import parse
+    import requests
     import tkinter as tk
     from tkinter import *
     from tkinter import messagebox
-    import csv
+    from bs4 import BeautifulSoup
 except:
     print('failed to import modules')
     exit()
@@ -113,8 +114,7 @@ else:
     a_year = x[3]
     a_quarter = x[4]
     a_ttid = x[5]
-    stra_ttid = str(a_ttid)
-    imagefile = './image/' + stra_ttid + ".gif"
+    imagefile = './image/' + str(a_ttid) + ".gif"
 
 #####################################################################################################
 
@@ -268,7 +268,6 @@ def InputData():
 
     # image download
     def getimage():
-        gi_url = 'https://namu.wiki/w/'
         cur.execute('''
         SELECT t_name, g_name, p_name, year, quarter, t_id
         FROM Title
@@ -281,6 +280,7 @@ def InputData():
         imname = lview[-1][0]
         ss_url = lview[-1][5]
         s_url = str(ss_url)
+        gi_url = 'https://namu.wiki/w/'
         urll =gi_url + imname
         savename = './image/' + s_url + ".gif"
 
@@ -761,7 +761,10 @@ ff = LabelFrame(window, text=" Search ")
 ff.pack(fill=X)
 
 #image label
-logo = PhotoImage(file=imagefile)
+try:
+    logo = PhotoImage(file=imagefile)
+except:
+    logo = PhotoImage(file='./image/wink.gif')
 photolabel = Label(ff, image=logo)
 photolabel.image = logo #항상 이미지가 나타날 수 있도록?
 photolabel.grid(row=0, columnspan=4)
