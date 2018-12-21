@@ -268,7 +268,7 @@ def InputData():
 
     # image download
     def getimage():
-        gi_url = 'https://www.google.co.kr/search?hl=en&authuser=0&tbm=isch&source=hp&biw=1280&bih=617&ei=xTcTXISrBYK38QX0g4vgAg&q='
+        gi_url = 'https://namu.wiki/w/'
         cur.execute('''
         SELECT t_name, g_name, p_name, year, quarter, t_id
         FROM Title
@@ -286,17 +286,21 @@ def InputData():
 
         text = requests.get(urll).text
 
-        text_source = StringIO(text)
-        parsed = parse(text_source)
+        soup = BeautifulSoup(text, 'html.parser')
 
-        imgss = parsed.findall('.//img')
+        imagelist = soup.find_all("img", class_="wiki-image")
+        imlist = imagelist[0]
+        ilist = imlist.get("data-src")
 
-        img_list = []
-        for a in imgss:
-            img_list.append(a.get('src'))
+        imsrc = str(ilist)
 
+        rsrc = "https:" + imsrc
+        print(rsrc)
 
-        urllib.request.urlretrieve(img_list[0], savename)
+        opener = urllib.request.build_opener()
+        opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+        urllib.request.install_opener(opener)
+        urllib.request.urlretrieve(rsrc, savename)
 
         y1 = PIL.Image.open(savename)
         y1size = 300, 320
