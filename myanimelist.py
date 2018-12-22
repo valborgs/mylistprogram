@@ -285,17 +285,13 @@ def InputData():
         savename = './image/' + s_url + ".gif"
 
         text = requests.get(urll).text
-
         soup = BeautifulSoup(text, 'html.parser')
+        imagelist = soup.find("div", class_="wiki-table-wrap table-right")
+        imlist = imagelist.find("img", class_="wiki-image")
 
-        imagelist = soup.find_all("img", class_="wiki-image")
-        imlist = imagelist[0]
         ilist = imlist.get("data-src")
-
         imsrc = str(ilist)
-
         rsrc = "https:" + imsrc
-        print(rsrc)
 
         opener = urllib.request.build_opener()
         opener.addheaders = [('User-agent', 'Mozilla/5.0')]
@@ -325,6 +321,9 @@ def InputData():
         if itn == "" or ign == "" or ipn == "" or iyn == "" or iqn == "":
             messagebox.showinfo("error","please, fill blanks", parent=input_window)
 
+        elif iqn not in ("1", "2", "3", "4"):
+            messagebox.showinfo("error","quarter value must be 1~4 !", parent=input_window)
+
         else:
             xx = [i for i in lview if itn in i]
             if xx:#xx값이 하나라도 있다면
@@ -343,7 +342,10 @@ def InputData():
                 f_genre = cur.execute("SELECT id From Genre WHERE g_name = ?", [ign]).fetchone()[0]
                 cur.execute('''INSERT INTO Title (t_name, genre_id, production_id, year_id, quarter_id ) VALUES (?,?,?,?,?)''', (itn, f_genre, f_production, f_year, f_quarter ))
                 conn.commit()
-                getimage()
+                try:
+                    getimage()
+                except:
+                    messagebox.showinfo("error", "Failed to get an image", parent=input_window)
                 pvbt.configure(state=NORMAL)
                 nxbt.configure(state=NORMAL)
                 if totalcount == 0:
@@ -726,7 +728,7 @@ def aboutmew():
     aboutme_window.geometry("+150+100")
     aboutme_window.attributes('-topmost', 'true')
     Label(aboutme_window, text='made by. MSE', width=30, padx=5, pady=5).grid(row=0,columnspan=3, padx=5, pady=5)
-    Label(aboutme_window, text='0.7 ver', width=30, padx=5, pady=5).grid(row=1,columnspan=3, padx=5, pady=5)
+    Label(aboutme_window, text='0.785 ver', width=30, padx=5, pady=5).grid(row=1,columnspan=3, padx=5, pady=5)
     aboutme_window.mainloop()
 
 #####################################################################################################################
