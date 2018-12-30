@@ -16,6 +16,8 @@ try:
     from tkinter import *
     from tkinter import messagebox
     from bs4 import BeautifulSoup
+    from pandas import DataFrame, read_csv
+    import pandas as pd
 except:
     print('failed to import modules')
     exit()
@@ -316,8 +318,6 @@ def InputData():
         iyn = iy_value.get()
         iqn = iq_value.get()
 
-
-
         if itn == "" or ign == "" or ipn == "" or iyn == "" or iqn == "":
             messagebox.showinfo("error","please, fill blanks", parent=input_window)
 
@@ -389,12 +389,9 @@ def InputData():
                     changeim()
                     messagebox.showinfo("done", "New data is inserted!", parent=input_window)
 
-
-
     ib1 = Button(input_window, state=NORMAL, command=ad2db, text="SAVE", width=58, pady=20)
     ib1.grid(row=5,columnspan=2, pady=5)
     input_window.mainloop()
-
 
 #delete window
 def DeleteData():
@@ -476,8 +473,6 @@ def DeleteData():
     deletebutton.pack()
     delete_window.mainloop()
 
-
-
 def showall():
     global lview
     sal_window = Toplevel()
@@ -525,9 +520,6 @@ def showall():
             ln_value.set(listnumber)
             changeim()
             sal_window.destroy()
-
-
-
 
     def ModifyData():
         global lview
@@ -629,7 +621,6 @@ def showall():
                 cur.execute('''SELECT id FROM Quarter WHERE quarter =?''',(mqn,))
                 mqn2 = cur.fetchone()[0]
 
-
                 cur.execute('''UPDATE Title SET t_name = ? WHERE t_name = ?''',(mtn,m_title))
                 cur.execute('''UPDATE Title SET genre_id = ? WHERE t_name = ?''',(mgn2,m_title))
                 cur.execute('''UPDATE Title SET production_id = ? WHERE t_name = ?''',(mpn2,m_title))
@@ -669,11 +660,9 @@ def showall():
                 sal_window.destroy()
                 mod_window.destroy()
 
-
             mb1 = Button(mod_window, state=NORMAL, command=moddata, text="수정", width=58, pady=20)
             mb1.grid(row=5,columnspan=2, pady=5)
             mod_window.mainloop()
-
 
     gobutton = Button(sal_window, text="GO", width=50, command=gobutt)
     gobutton.pack()
@@ -689,6 +678,7 @@ def exportw():
     export_window.wm_iconbitmap('./image/myicon.ico')
     export_window.resizable(0,0)
     export_window.attributes('-topmost', 'true')
+    export_window.grab_set()
 
     def excsv():
         cur.execute('''
@@ -712,13 +702,31 @@ def exportw():
         export_window.destroy()
         messagebox.showinfo('done','csvfile is created!')
 
-    Label(export_window, text='export to csv file', font=large_font).grid(row=0, column=0, padx=5, pady=10)
-    expbutton = Button(export_window, text='EXPORT', font=large_font, state=NORMAL, command=excsv)
-    expbutton.grid(row=0, column=1, padx=5, pady=10)
-    if not lview:
-        expbutton.configure(text='NO DATAS',state='disabled')
-    export_window.mainloop()
+    def exxls():
+        cur.execute('''
+        SELECT t_name, g_name, p_name, year, quarter
+        FROM Title
+        JOIN Genre ON Title.genre_id = Genre.id
+        JOIN Production ON Title.production_id = Production.id
+        JOIN Year ON Title.year_id = Year.id
+        JOIN Quarter ON Title.quarter_id = Quarter.id
+        ''')
+        lview = cur.fetchall()
+        df = pd.DataFrame(data = lview, columns=['Title', 'Genre', 'Production', 'Year', 'Quarter'])
+        df.index += 1
+        df.to_excel('list.xls',index=True,header=True)
 
+    Label(export_window, text='export to csv file', font=large_font).grid(row=0, column=0, padx=5, pady=10)
+    Label(export_window, text='export to xls file', font=large_font).grid(row=1, column=0, padx=5, pady=10)
+    csvbutton = Button(export_window, text='EXPORT', font=large_font, state=NORMAL, command=excsv)
+    csvbutton.grid(row=0, column=1, padx=5, pady=10)
+    xlsbutton = Button(export_window, text='EXPORT', font=large_font, state=NORMAL, command=exxls)
+    xlsbutton.grid(row=1, column=1, padx=5, pady=10)
+
+    if not lview:
+        csvbutton.configure(text='NO DATAS',state='disabled')
+        xlsbutton.configure(text='NO DATAS',state='disabled')
+    export_window.mainloop()
 
 def aboutmew():
     aboutme_window = Toplevel()
