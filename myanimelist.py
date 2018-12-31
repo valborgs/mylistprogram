@@ -1,27 +1,31 @@
 # -*- coding: utf-8 -*-
 
 print("importing modules...")
-try:
-    import os
-    from os import remove
-    import sqlite3
-    import urllib.request
-    from io import StringIO
-    from PIL import Image
-    import PIL
-    import csv
-    from lxml.html import parse
-    import requests
-    import tkinter as tk
-    from tkinter import *
-    from tkinter import messagebox
-    from bs4 import BeautifulSoup
-    from pandas import DataFrame, read_csv
-    import pandas as pd
-except:
-    print('failed to import modules')
-    exit()
-#코드순서: sqlite > 버튼,새창 > tkinter
+#try:
+import os
+from os import remove
+import sqlite3
+import urllib.request
+from io import StringIO
+from PIL import Image
+import PIL
+import csv
+from lxml.html import parse
+import requests
+import tkinter as tk
+from tkinter import *
+from tkinter import messagebox
+from bs4 import BeautifulSoup
+from pandas import DataFrame, read_csv
+import pandas as pd
+from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib import rc, font_manager
+import platform
+#except:
+    #print('failed to import modules')
+    #exit()
 
 #create window object
 window = Tk()
@@ -728,6 +732,55 @@ def exportw():
         xlsbutton.configure(text='NO DATAS',state='disabled')
     export_window.mainloop()
 
+def matplotcanvas():
+    global lview
+    if not lview:
+        messagebox.showinfo("error", "데이터가 없습니다")
+    else:
+        chart_window = Toplevel()
+        chart_window.title("chart")
+        chart_window.wm_iconbitmap('./image/myicon.ico')
+        chart_window.resizable(0,0)
+        chart_window.attributes('-topmost','true')
+
+        path = "./NanumGothic.ttf"
+        font_name = font_manager.FontProperties(fname=path).get_name()
+        rc('font', family=font_name)
+
+        counts =dict()
+        cur.execute('''
+        SELECT t_name, g_name, p_name, year, quarter
+        FROM Title
+        JOIN Genre ON Title.genre_id = Genre.id
+        JOIN Production ON Title.production_id = Production.id
+        JOIN Year ON Title.year_id = Year.id
+        JOIN Quarter ON Title.quarter_id = Quarter.id
+        ''')
+        g_list = cur.fetchall()
+        for g in g_list:
+            gs = g[1]
+            counts[gs] = counts.get(gs, 0) + 1
+        sizes= []
+        genres = ()
+        for genre, size in counts.items():
+            genres = genres + (genre, )
+            sizes.append(size)
+        sizes = sizes[:5]
+        genres = genres[:5]
+        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue', 'orange']
+        #explode = (0.1, 0, 0, 0)  # explode 1st slice
+        f = Figure(figsize=(5,5), dpi=100)
+        a = f.add_subplot(111)
+        a.set_title("장르")
+        a.pie(sizes, labels = genres, colors = colors, autopct='%1.1f%%', shadow=True, startangle=140)
+        canvas = FigureCanvasTkAgg(f, master = chart_window)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill = BOTH, expand= True)
+
+        chart_window.mainloop()
+
+
+
 def aboutmew():
     aboutme_window = Toplevel()
     aboutme_window.title("About me")
@@ -741,8 +794,6 @@ def aboutmew():
 
 #####################################################################################################################
 
-
-
 #define menu bar
 menu1 = Menu(window)
 filemenu = Menu(menu1,tearoff=0)
@@ -754,15 +805,13 @@ filemenu.add_separator()
 filemenu.add_command(label="quit", command=window.destroy)
 menu1.add_cascade(label="Data", menu=filemenu)
 expmenu = Menu(menu1,tearoff=0)
-expmenu.add_command(label="export to CSV", command=exportw)
+expmenu.add_command(label="export", command=exportw)
+expmenu.add_command(label="chart", command=matplotcanvas)
 menu1.add_cascade(label="Export", menu=expmenu)
 aboutmenu = Menu(menu1,tearoff=0)
 aboutmenu.add_command(label="About me", command=aboutmew)
 menu1.add_cascade(label="About", menu=aboutmenu)
 window.config(menu=menu1)
-
-
-
 
 
 ######################################################################################################################
@@ -843,17 +892,6 @@ quarter_value=StringVar()
 quarter_value.set(str(a_quarter))
 Entry(sf, relief=SUNKEN, textvariable=quarter_value, width=20, font=large_font).grid(row=4, column=1)
 #######################################################################################################################
-
-
-
-
-
-
-
-
-
-
-
 
 
 
