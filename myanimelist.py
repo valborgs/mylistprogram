@@ -732,7 +732,10 @@ def exportw():
         xlsbutton.configure(text='NO DATAS',state='disabled')
     export_window.mainloop()
 
+canvas = ''
+
 def matplotcanvas():
+    global canvas
     global lview
     if not lview:
         messagebox.showinfo("error", "데이터가 없습니다")
@@ -742,6 +745,128 @@ def matplotcanvas():
         chart_window.wm_iconbitmap('./image/myicon.ico')
         chart_window.resizable(0,0)
         chart_window.attributes('-topmost','true')
+
+
+        def g_chart():
+            global canvas
+            canvas.get_tk_widget().destroy()
+            path = "./NanumGothic.ttf"
+            font_name = font_manager.FontProperties(fname=path).get_name()
+            rc('font', family=font_name)
+
+            counts =dict()
+            cur.execute('''
+            SELECT t_name, g_name, p_name, year, quarter
+            FROM Title
+            JOIN Genre ON Title.genre_id = Genre.id
+            JOIN Production ON Title.production_id = Production.id
+            JOIN Year ON Title.year_id = Year.id
+            JOIN Quarter ON Title.quarter_id = Quarter.id
+            ''')
+            g_list = cur.fetchall()
+            for g in g_list:
+                gs = g[1]
+                counts[gs] = counts.get(gs, 0) + 1
+            sizes= []
+            genres = ()
+            for genre, size in counts.items():
+                genres = genres + (genre, )
+                sizes.append(size)
+            sizes = sizes[:5]
+            genres = genres[:5]
+            colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue', 'orange']
+            #explode = (0.1, 0, 0, 0)  # explode 1st slice
+            f = Figure(figsize=(5,5), dpi=100)
+            a = f.add_subplot(111)
+            a.set_title("장르")
+            a.pie(sizes, labels = genres, colors = colors, autopct='%1.1f%%', shadow=True, startangle=140)
+
+            canvas = FigureCanvasTkAgg(f, master = chart_window)
+            canvas.draw()
+            canvas.get_tk_widget().grid(row=1, columnspan=3)
+
+        def p_chart():
+            global canvas
+            canvas.get_tk_widget().destroy()
+            path = "./NanumGothic.ttf"
+            font_name = font_manager.FontProperties(fname=path).get_name()
+            rc('font', family=font_name)
+
+            counts =dict()
+            cur.execute('''
+            SELECT t_name, g_name, p_name, year, quarter
+            FROM Title
+            JOIN Genre ON Title.genre_id = Genre.id
+            JOIN Production ON Title.production_id = Production.id
+            JOIN Year ON Title.year_id = Year.id
+            JOIN Quarter ON Title.quarter_id = Quarter.id
+            ''')
+            p_list = cur.fetchall()
+            for p in p_list:
+                ps = p[2]
+                counts[ps] = counts.get(ps, 0) + 1
+            sizes= []
+            productions = ()
+            for production, size in counts.items():
+                productions = productions + (production, )
+                sizes.append(size)
+            sizes = sizes[:5]
+            productions = productions[:5]
+            colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue', 'orange']
+            #explode = (0.1, 0, 0, 0)  # explode 1st slice
+            f = Figure(figsize=(5,5), dpi=100)
+            a = f.add_subplot(111)
+            a.set_title("제작사")
+            a.pie(sizes, labels = productions, colors = colors, autopct='%1.1f%%', shadow=True, startangle=140)
+
+            canvas = FigureCanvasTkAgg(f, master = chart_window)
+            canvas.draw()
+            canvas.get_tk_widget().grid(row=1, columnspan=3)
+
+        def y_chart():
+            global canvas
+            canvas.get_tk_widget().destroy()
+            path = "./NanumGothic.ttf"
+            font_name = font_manager.FontProperties(fname=path).get_name()
+            rc('font', family=font_name)
+
+            counts =dict()
+            cur.execute('''
+            SELECT t_name, g_name, p_name, year, quarter
+            FROM Title
+            JOIN Genre ON Title.genre_id = Genre.id
+            JOIN Production ON Title.production_id = Production.id
+            JOIN Year ON Title.year_id = Year.id
+            JOIN Quarter ON Title.quarter_id = Quarter.id
+            ''')
+            y_list = cur.fetchall()
+            for y in y_list:
+                ys = y[3]
+                counts[ys] = counts.get(ys, 0) + 1
+            sizes= []
+            years = ()
+            for year, size in counts.items():
+                years = years + (year, )
+                sizes.append(size)
+            sizes = sizes[:5]
+            years = years[:5]
+            colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue', 'orange']
+            #explode = (0.1, 0, 0, 0)  # explode 1st slice
+            f = Figure(figsize=(5,5), dpi=100)
+            a = f.add_subplot(111)
+            a.set_title("연도")
+            a.pie(sizes, labels = years, colors = colors, autopct='%1.1f%%', shadow=True, startangle=140)
+
+            canvas = FigureCanvasTkAgg(f, master = chart_window)
+            canvas.draw()
+            canvas.get_tk_widget().grid(row=1, columnspan=3)
+
+        g_button = Button(chart_window, text='GENRE', command = g_chart)
+        g_button.grid(row=0, column=0, sticky ='nsew')
+        p_button = Button(chart_window, text='PRODUCTION', command = p_chart)
+        p_button.grid(row=0, column=1, sticky ='nsew')
+        y_button = Button(chart_window, text='YEAR', command = y_chart)
+        y_button.grid(row=0, column=2, sticky ='nsew')
 
         path = "./NanumGothic.ttf"
         font_name = font_manager.FontProperties(fname=path).get_name()
@@ -773,9 +898,10 @@ def matplotcanvas():
         a = f.add_subplot(111)
         a.set_title("장르")
         a.pie(sizes, labels = genres, colors = colors, autopct='%1.1f%%', shadow=True, startangle=140)
+
         canvas = FigureCanvasTkAgg(f, master = chart_window)
         canvas.draw()
-        canvas.get_tk_widget().pack(fill = BOTH, expand= True)
+        canvas.get_tk_widget().grid(row=1, columnspan=3)
 
         chart_window.mainloop()
 
