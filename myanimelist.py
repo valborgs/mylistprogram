@@ -441,6 +441,8 @@ def exportw():
         df = DataFrame(data = cndb.lview, columns=['Title', 'Genre', 'Production', 'Year', 'Quarter'])
         df.index += 1
         df.to_excel('list.xls',index=True,header=True)
+        export_window.destroy()
+        messagebox.showinfo('done','xlsfile is created!')
 
     Label(export_window, text='export to csv file', font=large_font).grid(row=0, column=0, padx=5, pady=10)
     Label(export_window, text='export to xls file', font=large_font).grid(row=1, column=0, padx=5, pady=10)
@@ -470,12 +472,15 @@ def matplotcanvas():
         ch.draw_chart(cndb.lview, 1, "TOP5 장르", chart_window)
 
         def g_chart():
+            ch.destroy_chart()
             ch.draw_chart(cndb.lview, 1, "TOP5 장르", chart_window)
 
         def p_chart():
+            ch.destroy_chart()
             ch.draw_chart(cndb.lview, 2, "TOP5 제작사", chart_window)
 
         def y_chart():
+            ch.destroy_chart()
             ch.draw_chart(cndb.lview, 3, "TOP5 연도", chart_window)
 
         g_button = Button(chart_window, text='GENRE', command = g_chart)
@@ -498,7 +503,7 @@ def aboutmew():
     aboutme_window.geometry("+150+100")
     aboutme_window.attributes('-topmost', 'true')
     Label(aboutme_window, text='made by. MSE\nvoll1212@naver.com', width=30, padx=5, pady=5).grid(row=0,columnspan=3, padx=5, pady=5)
-    Label(aboutme_window, text='1.0 ver', width=30, padx=5, pady=5).grid(row=1,columnspan=3, padx=5, pady=5)
+    Label(aboutme_window, text='1.0.2 ver', width=30, padx=5, pady=5).grid(row=1,columnspan=3, padx=5, pady=5)
     aboutme_window.mainloop()
 
 #####################################################################################################################

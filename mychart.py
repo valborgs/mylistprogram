@@ -12,13 +12,15 @@ class Drawchart():
         self.sizes= []
         self.subjects = ()
         self.colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue', 'orange']
-        self.f = Figure(figsize=(5,5), dpi=100)
+        self.f = Figure(figsize=(7,5), dpi=100)
         self.canvas = FigureCanvasTkAgg(self.f, master = masterwindow)
         self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=1, columnspan=3)
+        self.canvas.get_tk_widget().grid(row=1, columnspan=3, sticky='nsew')
+
+    def destroy_chart(self):
+        self.canvas.get_tk_widget().destroy()
 
     def draw_chart(self, list, num, titlename, masterwindow):
-        self.canvas.get_tk_widget().destroy()
         self.counts = dict()
         self.sizes= []
         self.subjects = ()
@@ -26,16 +28,20 @@ class Drawchart():
 
         for g in list:#list에cndb.lview넣기
             gs = g[int(num)]#장르는 1, 제작사는 2, 연도는 3 num에다 넣기
-            self.counts[gs] = self.counts.get(gs, 0) + 1
+            if gs in self.counts:
+                self.counts[gs] += 1
+            else:
+                self.counts[gs] = 1
 
-        for subject, size in self.counts.items():
+        top_list = sorted(self.counts.items(), key=lambda x: x[1], reverse=True)
+        top5_list = top_list[:5]
+        for subject, size in top5_list:
             self.subjects = self.subjects + (subject, )
             self.sizes.append(size)
-        self.sizes = self.sizes[:5]
-        self.subjects = self.subjects[:5]
+
         #explode = (0.1, 0, 0, 0)  # explode 1st slice
 
-        self.f = Figure(figsize=(5,5), dpi=100)
+        self.f = Figure(figsize=(7,5), dpi=100)
         a = self.f.add_subplot(111)
         a.set_title(titlename)
         a.pie(self.sizes, labels = self.subjects, colors = self.colors, autopct='%1.1f%%', shadow=True, startangle=140)
@@ -43,6 +49,3 @@ class Drawchart():
         self.canvas = FigureCanvasTkAgg(self.f, master = masterwindow)
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=1, columnspan=3)
-
-    def destroy_chart(self):
-        self.canvas.get_tk_widget().destroy()
