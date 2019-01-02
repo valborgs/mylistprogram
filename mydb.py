@@ -176,9 +176,3 @@ class ConDB():
         self.cur.execute('''UPDATE Title SET quarter_id = ? WHERE t_name = ?''',(mqn2,self.a_title))
 
         self.conn.commit()
-
-
-x = ConDB()
-x.conndb()
-x.createtable()
-x.loaddata()
