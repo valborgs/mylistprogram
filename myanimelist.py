@@ -4,7 +4,6 @@ print("importing modules...")
 try:
     from os import remove
     import csv
-    import tkinter as tk
     from tkinter import *
     from tkinter import messagebox
     from pandas import DataFrame, read_csv
