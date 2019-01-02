@@ -250,8 +250,9 @@ def DeleteData():
             listviewcount.set("total "+ str(totalcount))
             delete_window.destroy()
             try:
-                fn = str(cndb.fn)
-                os.remove('./image/' + fn + '.gif')
+                fn = './image/' + str(cndb.fn) + '.gif'
+                print(fn)
+                remove(fn)
             except:
                 pass
 
