@@ -2,6 +2,7 @@
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib import rc, font_manager
+import numpy as np
 
 
 class Drawchart():
@@ -44,7 +45,12 @@ class Drawchart():
         self.f = Figure(figsize=(7,5), dpi=100)
         a = self.f.add_subplot(111)
         a.set_title(titlename)
-        a.pie(self.sizes, labels = self.subjects, colors = self.colors, autopct='%1.1f%%', shadow=True, startangle=140)
+
+        def func(pct, allvals):
+            absolute = int(pct/100.*np.sum(allvals))
+            return "{:.1f}%\n({:d})".format(pct, absolute)
+
+        a.pie(self.sizes, labels = self.subjects, colors = self.colors, autopct=lambda pct: func(pct, self.sizes), shadow=True, startangle=140)
 
         self.canvas = FigureCanvasTkAgg(self.f, master = masterwindow)
         self.canvas.draw()

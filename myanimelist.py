@@ -503,7 +503,7 @@ def aboutmew():
     aboutme_window.geometry("+150+100")
     aboutme_window.attributes('-topmost', 'true')
     Label(aboutme_window, text='made by. MSE\nvoll1212@naver.com', width=30, padx=5, pady=5).grid(row=0,columnspan=3, padx=5, pady=5)
-    Label(aboutme_window, text='1.0.3 ver', width=30, padx=5, pady=5).grid(row=1,columnspan=3, padx=5, pady=5)
+    Label(aboutme_window, text='1.0.5 ver', width=30, padx=5, pady=5).grid(row=1,columnspan=3, padx=5, pady=5)
     aboutme_window.mainloop()
 
 #####################################################################################################################
